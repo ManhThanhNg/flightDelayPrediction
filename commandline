@@ -1,0 +1,16 @@
+kafka-topics --list --bootstrap-server localhost:9092
+kafka-console-consumer --topic flight --from-beginning --bootstrap-server broker:9092
+kafka-console-consumer --topic flight --from-beginning --bootstrap-server broker:9092
+kafka-topics --bootstrap-server broker:9092 --delete --topic flight
+kafka-console-consumer --topic __consumer_offsets --from-beginning --bootstrap-server broker:9092
+
+
+
+psql -U postgres -> connect to postgres
+\l -> list databases
+\dt -> list tables
+\c flight -> connect to flight database
+DROP TABLE IF EXISTS voter;
+DROP TABLE IF EXISTS vote;
+
+<class 'int'> <class 'int'> <class 'int'> <class 'int'> <class 'float'> <class 'int'> <class 'float'> <class 'int'> <class 'str'> <class 'int'> <class 'str'> <class 'float'> <class 'float'> <class 'float'> <class 'float'> <class 'float'> <class 'str'> <class 'str'> <class 'int'> <class 'float'> <class 'float'> <class 'int'> <class 'str'> <class 'int'> <class 'float'> <class 'float'> <class 'float'> <class 'float'> <class 'float'>
