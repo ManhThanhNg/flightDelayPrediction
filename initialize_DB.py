@@ -40,8 +40,11 @@ def create_table(conn, cur):
 
 
 if __name__ == "__main__":
-    conn = psycopg2.connect("host=localhost dbname=flight user=postgres password=postgres")
+    conn = psycopg2.connect("host=mthanh.ddns.net dbname=flight user=postgres password=postgres")
     cur = conn.cursor()
     create_table(conn, cur)
     cur.execute("SELECT * FROM delayedFlight")
     print(cur.fetchall())
+
+    # # cur.execute("DROP TABLE delayedFlight")
+    # conn.commit()

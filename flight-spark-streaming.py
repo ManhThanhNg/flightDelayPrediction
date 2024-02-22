@@ -1,58 +1,49 @@
+# import os
+# import sys
+# os.environ['PYSPARK_PYTHON'] = sys.executable
+# os.environ['PYSPARK_DRIVER_PYTHON'] = sys.executable
+
 from pyspark.sql import SparkSession
-from pyspark.sql.functions import sum as _sum
 from pyspark.sql.types import StructType, StructField, StringType, IntegerType, TimestampType, FloatType
 from pyspark.sql.functions import *
-if __name__ == "__main__":
-    spark = (SparkSession.builder
-             .appName("Realtime Flight")
-             .master("spark://localhost:7077")
-             .config("spark.jars.packages", "org.apache.spark:spark-sql-kafka-0-10_2.12:3.5.0")
-             .config('spark.jars', 'D:\Coding\FlightDelaysPredict\postgresql-42.7.1.jar')  # add postgresql driver
-             .config("spark.sql.adaptive.enabled", "false")
-             .getOrCreate())
+spark = (SparkSession.builder
+         .appName("Realtime Flight")
+         # .master("spark://127.0.0.1:7077")
+         .master("local")
+         .config("spark.jars.packages", "org.apache.spark:spark-sql-kafka-0-10_2.12:3.5.0")
+         .config('spark.jars', 'D:\\Coding\\FlightDelaysPredict\\postgresql-42.7.1.jar')  # add postgresql driver
+         .config("spark.sql.adaptive.enabled", "false")
+         .getOrCreate())
+flight_schema = StructType([
+    StructField("year", IntegerType(), True),
+    StructField("month", IntegerType(), True),
+    StructField("dayofmonth", IntegerType(), True),
+    StructField("crsdeptime", IntegerType(), True),
+    StructField("crsarrtime", IntegerType(), True),
+    StructField("uniquecarrier", StringType(), True),
+    StructField("origin", StringType(), True),
+    StructField("dest", StringType(), True),
+    StructField("distance", IntegerType(), True),
+    StructField("predict", StringType(), True),
+])
 
-    flight_schema = StructType([
-        StructField("Year", IntegerType(), True),
-        StructField("Month", IntegerType(), True),
-        StructField("DayofMonth", IntegerType(), True),
-        StructField("DayOfWeek", IntegerType(), True),
-        StructField("DepTime", FloatType(), True),
-        StructField("CRSDepTime", IntegerType(), True),
-        StructField("ArrTime", FloatType(), True),
-        StructField("CRSArrTime", IntegerType(), True),
-        StructField("UniqueCarrier", StringType(), True),
-        StructField("FlightNum", IntegerType(), True),
-        StructField("TailNum", StringType(), True),
-        StructField("ActualElapsedTime", FloatType(), True),
-        StructField("CRSElapsedTime", FloatType(), True),
-        StructField("AirTime", FloatType(), True),
-        StructField("ArrDelay", FloatType(), True),
-        StructField("DepDelay", FloatType(), True),
-        StructField("Origin", StringType(), True),
-        StructField("Dest", StringType(), True),
-        StructField("Distance", IntegerType(), True),
-        StructField("TaxiIn", FloatType(), True),
-        StructField("TaxiOut", FloatType(), True),
-        StructField("Cancelled", IntegerType(), True),
-        StructField("CancellationCode", StringType(), True),
-        StructField("Diverted", IntegerType(), True),
-        StructField("CarrierDelay", FloatType(), True),
-        StructField("WeatherDelay", FloatType(), True),
-        StructField("NASDelay", FloatType(), True),
-        StructField("SecurityDelay", FloatType(), True),
-        StructField("LateAircraftDelay", FloatType(), True)
-    ])
-    # test if spark session is working
+if __name__=="__main__":
     flight_df = (spark.readStream
                  .format("kafka")
                  .option("kafka.bootstrap.servers", "localhost:9092")  # kafka broker
-                 .option("subscribe", "flight")  # topic
+                 .option("subscribe", "flight-prediction")  # topic
                  .option("startingOffsets", "earliest")  # read from beginning of the stream
                  .load()
                  .selectExpr("CAST(value AS STRING)")  # cast value column to string
-                 .select(from_json(col("value"), flight_schema).alias('data'))  # convert json to columns
+                 .select(from_json(col("value"), flight_schema).alias('data')) # convert json to columns
                  .select("data.*")
                  )
-    # print 5 rows from the dataframe
-    flight_df.printSchema()
 
+    # write stream to console
+    query = (flight_df.writeStream
+             .outputMode("append")
+             .format("console")
+             .option("checkpointLocation", "D:\\Coding\\FlightDelaysPredict\\checkpoint")
+             .outputMode("update")
+             .start())
+    query.awaitTermination()
