@@ -1,8 +1,11 @@
 import psycopg2 as psycopg2
 
+from config import POSTGRES_HOST
+
+
 def create_table(conn, cur):
     cur.execute(
-        """
+        """  
         CREATE TABLE IF NOT EXISTS delayedFlight (
             Year INTEGER,
             Month INTEGER,
@@ -40,11 +43,12 @@ def create_table(conn, cur):
 
 
 if __name__ == "__main__":
-    conn = psycopg2.connect("host=mthanh.ddns.net dbname=flight user=postgres password=postgres")
+    conn = psycopg2.connect(f"host={POSTGRES_HOST} dbname=flight user=postgres password=postgres")
     cur = conn.cursor()
+
     create_table(conn, cur)
     cur.execute("SELECT * FROM delayedFlight")
     print(cur.fetchall())
 
-    # # cur.execute("DROP TABLE delayedFlight")
+    # cur.execute("DROP TABLE delayedFlight")
     # conn.commit()

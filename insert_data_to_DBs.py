@@ -8,20 +8,10 @@ import pandas as pd
 
 import os
 
-
+from config import POSTGRES_HOST
 from deliveryReport import delivery_report
 
-conf = {
-    'bootstrap.servers': 'localhost:9092',
-}
-consumer = Consumer(conf |
-                    {'group.id': 'flight-group',
-                     'auto.offset.reset': 'earliest',
-                     'enable.auto.commit': False}
-                    )
-producer = SerializingProducer(conf)
-
-conn = psycopg2.connect("host=mthanh.ddns.net dbname=flight user=postgres password=postgres")
+conn = psycopg2.connect(f"host={POSTGRES_HOST} dbname=flight user=postgres password=postgres")
 cur = conn.cursor()
 
 def insert_flight(conn, cur, row):
@@ -47,20 +37,14 @@ if __name__ == "__main__":
                 df = pd.read_csv(os.path.join(dirname, filename))
                 # drop the first column
                 df = df.drop(df.columns[0], axis=1)
+                # print schema
+                print(df.dtypes)
                 # for each row in the dataframe insert the row into the delayedFlight table
-                for index, row in df.iterrows():
-                    try:
-                        insert_flight(conn, cur, row)
-                        print(f"Inserted {index} out of {len(df)} rows into delayedFlight table.")
-                        # producer.produce(
-                        #     topic='flight',
-                        #     key=str(index),
-                        #     value=row.to_json(),
-                        #     on_delivery=delivery_report
-                        # )
-                        # producer.flush(0)
-                        # print(f"Produced {index} out of {len(df)} rows into flight topic.")
-                    except Exception as e:
-                        print(e)
-                    # time.sleep(0.5)
+                # for index, row in df.iterrows():
+                #     try:
+                #         insert_flight(conn, cur, row)
+                #         print(f"Inserted {index} out of {len(df)} rows into delayedFlight table.")
+                #     except Exception as e:
+                #         print(e)
+                #     # time.sleep(0.5)
     conn.close()

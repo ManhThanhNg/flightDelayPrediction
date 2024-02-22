@@ -2,6 +2,7 @@ from confluent_kafka import Consumer, SerializingProducer, KafkaError
 import os
 import sys
 
+from config import KAFKA_BROKER_HOST
 from deliveryReport import delivery_report
 
 os.environ['PYSPARK_PYTHON'] = sys.executable
@@ -24,7 +25,7 @@ spark = (SparkSession.builder
          .getOrCreate())
 
 conf = {
-    'bootstrap.servers': 'localhost:9092',
+    'bootstrap.servers': f'{KAFKA_BROKER_HOST}:9092',
 }
 consumer = Consumer(conf |
                     {'group.id': 'flight-group',
@@ -57,12 +58,7 @@ if __name__ == "__main__":
                     print(msg.error())
                     break
             else:
-                # turn message into a dataframe
                 message = json.loads(msg.value().decode('utf-8'))
-                # # print(msg.value().decode('utf-8'))
-                # print(type(msg.value().decode('utf-8')))
-                # print(message.items())
-                # creaet df that have these column: year|month|dayofmonth|crsdeptime|crsarrtime|uniquecarrier|origin|dest|distance
                 df = spark.createDataFrame([Row(**message)])
                 indexer = StringIndexer(inputCol="uniquecarrier", outputCol="uniquecarrier_index").fit(df).transform(df)
                 indexer = StringIndexer(inputCol="origin", outputCol="origin_index").fit(indexer).transform(indexer)
@@ -71,6 +67,7 @@ if __name__ == "__main__":
                 flight_assembled = assembler.transform(indexer)
                 lr = LogisticRegressionModel.load("D:\\Coding\\FlightDelaysPredict\\models\\logistic_regression_model")
                 predictions = lr.transform(flight_assembled)
+
                 # create new df with column year|month|dayofmonth|crsdeptime|crsarrtime|uniquecarrier|origin|dest|distance|uniquecarrier_index|origin_index|dest_index| with predict column that describe the value in prediction
                 predictions_result = predictions.select("year", "month", "dayofmonth", "crsdeptime", "crsarrtime", "uniquecarrier", "origin", "dest", "distance", expr("""
                     case
@@ -95,4 +92,3 @@ if __name__ == "__main__":
         pass
     finally:
         consumer.close()
-        producer.close()

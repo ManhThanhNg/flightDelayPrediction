@@ -1,0 +1,2 @@
+KAFKA_BROKER_HOST = "localhost"
+POSTGRES_HOST = "192.168.1.20"

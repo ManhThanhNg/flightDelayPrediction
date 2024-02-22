@@ -1,8 +1,10 @@
 kafka-topics --list --bootstrap-server localhost:9092
 kafka-console-consumer --topic flight --from-beginning --bootstrap-server broker:9092
 kafka-console-consumer --topic flight-prediction --from-beginning --bootstrap-server broker:9092
+kafka-console-consumer --topic origin_dest_count --from-beginning --bootstrap-server broker:9092
 kafka-topics --bootstrap-server broker:9092 --delete --topic flight
 kafka-topics --bootstrap-server broker:9092 --delete --topic flight-prediction
+kafka-topics --bootstrap-server broker:9092 --delete --topic origin_dest_count
 kafka-console-consumer --topic __consumer_offsets --from-beginning --bootstrap-server broker:9092
 
 

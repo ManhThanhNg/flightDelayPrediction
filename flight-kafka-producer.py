@@ -8,11 +8,11 @@ import pandas as pd
 
 import os
 
-
+from config import KAFKA_BROKER_HOST
 from deliveryReport import delivery_report
 
 conf = {
-    'bootstrap.servers': 'localhost:9092',
+    'bootstrap.servers': f'{KAFKA_BROKER_HOST}:9092',
 }
 consumer = Consumer(conf |
                     {'group.id': 'flight-group',
